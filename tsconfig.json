@@ -1,0 +1,21 @@
+{
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "build"],
+  "compilerOptions": {
+    "strict": true,
+    "allowJs": false,
+    "noImplicitAny": true,
+    "rootDir": "./src",
+    "module": "commonjs",
+    "esModuleInterop": true,
+    "declaration": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true,
+    "target": "es2017",
+    "sourceMap": true,
+    "outDir": "./build",
+    "baseUrl": "./",
+    "incremental": true
+  }
+}
