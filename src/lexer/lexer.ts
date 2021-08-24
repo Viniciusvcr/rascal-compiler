@@ -45,6 +45,14 @@ export default class Lexer {
         this.currentTokenEnd = 0;
     }
 
+    private locate(): Placement {
+        return new Placement(
+            this.currentLine,
+            this.currentTokenStart,
+            this.currentTokenEnd,
+        );
+    }
+
     private isAtEnd() {
         return this.currentChar >= this.sourceCode.length;
     }
@@ -177,11 +185,7 @@ export default class Lexer {
                 throw new LexerError({
                     type: LexerErrorType.InvalidToken,
                     lexeme: c,
-                    placement: new Placement(
-                        this.currentLine,
-                        this.currentTokenStart,
-                        this.currentTokenEnd,
-                    ),
+                    placement: this.locate(),
                 });
 
             case '/':
@@ -195,11 +199,8 @@ export default class Lexer {
 
                 throw new LexerError({
                     type: LexerErrorType.UnexpectedCharacter,
-                    placement: new Placement(
-                        this.currentLine,
-                        this.currentTokenStart,
-                        this.currentTokenEnd,
-                    ),
+                    lexema: c,
+                    placement: this.locate(),
                 });
 
             case '{':
@@ -268,11 +269,8 @@ export default class Lexer {
 
                 throw new LexerError({
                     type: LexerErrorType.UnexpectedCharacter,
-                    placement: new Placement(
-                        this.currentLine,
-                        this.currentTokenStart,
-                        this.currentTokenEnd,
-                    ),
+                    lexema: c,
+                    placement: this.locate(),
                 });
         }
     }

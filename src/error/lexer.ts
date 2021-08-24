@@ -1,4 +1,6 @@
+import { Logger } from 'src/common/';
 import { Placement } from 'src/lexer/token';
+import { errorHeader } from './error';
 
 export enum LexerErrorType {
     InvalidToken,
@@ -8,6 +10,7 @@ export enum LexerErrorType {
 
 export interface UnexpectedCharacterError {
     type: LexerErrorType.UnexpectedCharacter;
+    lexema: string;
     placement: Placement;
 }
 
@@ -31,14 +34,37 @@ export type Error =
 export default class LexerError {
     constructor(public readonly error: Error) {}
 
-    public show() {
+    public log() {
+        const logger = new Logger();
+
         switch (this.error.type) {
-            case LexerErrorType.InvalidToken:
-                return `Invalid Token ${this.error.lexeme}`;
-            case LexerErrorType.UnexpectedCharacter:
-                return `Unexpected character in line ${this.error.placement.line}`;
-            case LexerErrorType.UnterminatedBlockComment:
-                return `Unterminated block comment in line ${this.error.line}`;
+            case LexerErrorType.InvalidToken: {
+                const prefix = errorHeader(this.error.placement);
+
+                return logger.error({
+                    prefix,
+                    str: `Invalid Token "${this.error.lexeme}"`,
+                });
+            }
+            case LexerErrorType.UnexpectedCharacter: {
+                const prefix = errorHeader(this.error.placement);
+
+                return logger.error({
+                    prefix,
+                    str: `Unexpected character '${this.error.lexema}'`,
+                });
+            }
+            case LexerErrorType.UnterminatedBlockComment: {
+                const prefix = errorHeader({
+                    line: this.error.line,
+                    startsAt: this.error.startsAt,
+                });
+
+                return logger.error({
+                    prefix,
+                    str: `Unterminated block comment`,
+                });
+            }
         }
     }
 }
