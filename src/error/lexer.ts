@@ -1,6 +1,6 @@
 import { Logger } from '../common/';
 import { Placement } from '../lexer/token';
-import { errorHeader } from './error';
+import IError, { errorHeader } from './error';
 
 export enum LexerErrorType {
     InvalidToken,
@@ -31,7 +31,7 @@ export type Error =
     | InvalidToken
     | UnterminatedBlockComment;
 
-export default class LexerError {
+export default class LexerError implements IError {
     constructor(public readonly error: Error) {}
 
     public log() {

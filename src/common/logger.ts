@@ -8,7 +8,7 @@ interface Params {
 export default class Logger {
     log({ prefix, str }: Params) {
         console.log(
-            `${prefix && `${Color.WHITE}${prefix}${Color.RESET}`}${
+            `${prefix ? `${Color.WHITE}${prefix}${Color.RESET}` : ''}${
                 Color.WHITE
             }${str}${Color.RESET}`,
         );
@@ -16,7 +16,7 @@ export default class Logger {
 
     error({ prefix, str }: Params) {
         console.log(
-            `${prefix && `${Color.WHITE}${prefix}${Color.RESET}`}${
+            `${prefix ? `${Color.WHITE}${prefix}${Color.RESET}` : ''}${
                 Color.RED
             }${str}${Color.RESET}`,
         );
@@ -24,7 +24,7 @@ export default class Logger {
 
     warn({ prefix, str }: Params) {
         console.log(
-            `${prefix && `${Color.WHITE}${prefix}${Color.RESET}`}${
+            `${prefix ? `${Color.WHITE}${prefix}${Color.RESET}` : ''}${
                 Color.YELLOW
             }${str}${Color.RESET}`,
         );

@@ -1,11 +1,8 @@
+import { INPUT_FILENAME } from '../common/util';
 import { Placement } from '../lexer/token';
 
 export default interface IError {
-    line: number;
-    startsAt: number;
-    endsAt: number;
-
-    toString(): string;
+    log(): void;
 }
 
 export const errorHeader = ({
@@ -13,7 +10,7 @@ export const errorHeader = ({
     startsAt,
     endsAt,
 }: Partial<Placement>): string => {
-    return `${process.argv[2]}:${line}${startsAt ? `.${startsAt}` : ''}${
+    return `${INPUT_FILENAME}:${line}${startsAt ? `.${startsAt}` : ''}${
         endsAt ? `.${endsAt}` : ''
     }: Rascal Error: `;
 };
