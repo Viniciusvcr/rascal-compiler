@@ -1,4 +1,4 @@
-import { Nullable } from 'src/common/util';
+import { Nullable } from '../common/util';
 import { TokenType } from './token-type';
 
 export class Placement {

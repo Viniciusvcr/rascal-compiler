@@ -1,5 +1,5 @@
-import { Logger } from 'src/common/';
-import { Placement } from 'src/lexer/token';
+import { Logger } from '../common/';
+import { Placement } from '../lexer/token';
 import { errorHeader } from './error';
 
 export enum LexerErrorType {

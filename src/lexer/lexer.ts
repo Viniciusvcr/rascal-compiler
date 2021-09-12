@@ -1,6 +1,5 @@
-import { EOF } from 'dns';
-import { Nullable } from 'src/common/util';
-import { LexerError, LexerErrorType } from 'src/error';
+import { Nullable } from '../common/util';
+import { LexerError, LexerErrorType } from '../error';
 import Token, { Placement } from './token';
 import { TokenType } from './token-type';
 

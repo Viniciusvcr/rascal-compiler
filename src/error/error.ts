@@ -1,4 +1,4 @@
-import { Placement } from 'src/lexer/token';
+import { Placement } from '../lexer/token';
 
 export default interface IError {
     line: number;
