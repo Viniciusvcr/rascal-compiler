@@ -105,7 +105,7 @@ export default class Lexer {
         const keyword_type = keywords.get(text);
 
         if (keyword_type) {
-            this.newToken(keyword_type, text);
+            return this.newToken(keyword_type, text);
         }
 
         return this.newToken(TokenType.IDENTIFIER, text);

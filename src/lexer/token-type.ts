@@ -1,5 +1,5 @@
 export enum TokenType {
-    EOF,
+    EOF = 1,
     COMMENT,
     BLANK,
     NEWLINE,
