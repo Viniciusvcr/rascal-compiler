@@ -1,75 +1,78 @@
+import { Token } from '../lexer';
 import { TokenType } from '../lexer/token-type';
 
-export enum UnaryOp {
-    Minus = 1,
+export enum OpRelacao {
+    Igualdade = 1,
+    Diferenca,
+    MenorQue,
+    MenorIgual,
+    Maior,
+    MaiorIgual,
 }
 
-export enum BinaryCompOp {
-    Equal = 1,
-    NotEqual,
-    LessThan,
-    LessEqual,
-    Greater,
-    GreaterEqual,
-}
-
-export enum BinaryArithOp {
-    Add = 1,
+export enum OpExprSimples {
+    Soma,
     Sub,
-    Mul,
-    Div,
-}
-
-export enum BinaryLogicOp {
-    And = 1,
     Or,
 }
 
-export function matchBinaryCompOp(t: TokenType) {
-    switch (t) {
+export enum OpTermo {
+    Mul,
+    Div,
+    And,
+}
+
+export function matchOpRelacao(tt: TokenType, t: Token) {
+    switch (tt) {
         case TokenType.DIFFERENCE:
-            return BinaryCompOp.NotEqual;
+            return t;
 
         case TokenType.EQUAL:
-            return BinaryCompOp.Equal;
+            return t;
 
         case TokenType.GREATER:
-            return BinaryCompOp.Greater;
+            return t;
 
         case TokenType.GREATER_EQUAL:
-            return BinaryCompOp.GreaterEqual;
+            return t;
 
         case TokenType.LESS:
-            return BinaryCompOp.LessThan;
+            return t;
 
         case TokenType.LESS_EQUAL:
-            return BinaryCompOp.LessEqual;
+            return t;
 
         default:
             return null;
     }
 }
 
-export function matchAddSub(t: TokenType) {
-    switch (t) {
+export function matchOpExprSimples(tt: TokenType, t: Token) {
+    switch (tt) {
         case TokenType.PLUS:
-            return BinaryArithOp.Add;
+            return t;
 
         case TokenType.MINUS:
-            return BinaryArithOp.Sub;
+            return t;
+
+        case TokenType.OR:
+            return t;
 
         default:
             return null;
     }
 }
 
-export function matchMulDiv(t: TokenType) {
-    switch (t) {
+export function matchOpTermo(tt: TokenType, t: Token) {
+    switch (tt) {
         case TokenType.STAR:
-            return BinaryArithOp.Mul;
+            return t;
 
         case TokenType.DIV:
-            return BinaryArithOp.Div;
+            return t;
+
+        case TokenType.AND:
+            return t;
 
         default:
             return null;

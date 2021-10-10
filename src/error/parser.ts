@@ -6,6 +6,7 @@ export enum ParserErrorType {
     IdentifierExpected,
     MissingExpression,
     Expected,
+    UnexpectedToken,
 }
 
 export interface IdentifierExpected {
@@ -24,7 +25,17 @@ export interface Expected {
     tt: TokenType;
 }
 
-export type Error = IdentifierExpected | MissingExpression | Expected;
+export interface UnexpectedToken {
+    type: ParserErrorType.UnexpectedToken;
+    line: number;
+    tt: TokenType;
+}
+
+export type Error =
+    | IdentifierExpected
+    | MissingExpression
+    | Expected
+    | UnexpectedToken;
 
 export class UParserError {
     constructor(public readonly error: Error) {}

@@ -6,37 +6,25 @@ export enum ValueType {
     Bool,
 }
 
-export interface Integer {
-    type: ValueType.Integer;
+export class Integer {
+    type = ValueType.Integer;
     literal: number;
+
+    constructor(public token: Token) {
+        this.literal = parseInt(token.lexeme ?? '0');
+    }
 }
 
-export interface Bool {
-    type: ValueType.Bool;
-    literal: boolean;
+export class Bool {
+    type = ValueType.Bool;
+
+    constructor(public literal: boolean, public token: Token) {}
 }
 
 export type Value = Integer | Bool;
 
-export type Identifier = String;
-
-export function matchNumberBool(tt: TokenType, t: Token): Value | null {
-    switch (tt) {
-        case TokenType.FALSE:
-            return { type: ValueType.Bool, literal: false };
-
-        case TokenType.TRUE:
-            return { type: ValueType.Bool, literal: true };
-
-        case TokenType.NUMBER:
-            return {
-                type: ValueType.Integer,
-                literal: parseInt(t.lexeme ?? '0'),
-            };
-
-        default:
-            return null;
-    }
+export class Identificador {
+    constructor(public token: Token) {}
 }
 
 export function matchIdentifier(tt: TokenType, t: Token): Token | null {

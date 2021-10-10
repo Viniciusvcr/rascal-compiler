@@ -20,7 +20,11 @@ function main() {
         const lexer = new Lexer(sourceCode);
 
         const tokens = lexer.scanTokens();
-        deepLog(tokens);
+
+        const parser = new Parser(tokens);
+
+        const program = parser.parse();
+        deepLog(program);
     } catch (err) {
         if (
             err instanceof IOError ||

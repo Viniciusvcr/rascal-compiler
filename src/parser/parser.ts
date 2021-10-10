@@ -5,18 +5,46 @@ import ParserError, {
 } from '../error/parser';
 import { Token } from '../lexer';
 import { TokenType } from '../lexer/token-type';
-import { Expr, ExprType } from './expr';
-import { matchIdentifier, matchNumberBool } from './literal';
 import {
-    BinaryArithOp,
-    BinaryCompOp,
-    BinaryLogicOp,
-    matchAddSub,
-    matchBinaryCompOp,
-    matchMulDiv,
-    UnaryOp,
+    Atribuicao,
+    ChamadaProcedimento,
+    Comando,
+    Condicional,
+    Escrita,
+    Expr,
+    ExprSimples,
+    Leitura,
+    ListaExpr,
+    Repeticao,
+    Termo,
+} from './comando';
+import {
+    Bloco,
+    ComandoComposto,
+    Decl,
+    DeclVariaveis,
+    ListaIdentificadores,
+    Programa,
+    SecaoDeclVariaveis,
+    Tipo,
+} from './decl';
+import {
+    Agrupamento,
+    ChamadaFuncao,
+    Fator,
+    Logico,
+    Negacao,
+    Numero,
+    UMinus,
+    Variavel,
+} from './fator';
+import { Bool, Identificador, Integer, matchIdentifier } from './literal';
+import {
+    matchOpExprSimples,
+    matchOpRelacao,
+    matchOpTermo,
+    OpRelacao,
 } from './operations';
-import { Stmt, StmtType } from './stmt';
 
 export default class Parser {
     private currentLine: number = 0;
@@ -95,55 +123,11 @@ export default class Parser {
         });
     }
 
-    private primary(): Expr {
-        let mapped;
-        if ((mapped = this.matchAndMap(matchNumberBool))) {
-            return { type: ExprType.Literal, value: mapped };
-        }
+    private tipo() {
+        if (this.check(TokenType.IDENTIFIER)) {
+            const token = this.advance();
 
-        if (this.match([TokenType.LEFT_PAREN])) {
-            const expr = this.expression();
-
-            this.consume(TokenType.RIGHT_PAREN);
-
-            return { type: ExprType.Grouping, expr };
-        }
-
-        if (this.match([TokenType.NOT])) {
-            const expr = this.expression();
-
-            return { type: ExprType.LogicNot, expr };
-        }
-
-        if ((mapped = this.matchAndMap(matchIdentifier))) {
-            return { type: ExprType.Variable, token: mapped };
-        }
-
-        throw new UParserError({
-            type: ParserErrorType.MissingExpression,
-            line: this.currentLine,
-        });
-    }
-
-    private finishCall(expr: Expr): Expr {
-        let params: Expr[] = [];
-
-        if (!this.match([TokenType.RIGHT_PAREN])) {
-            params.push(this.expression());
-
-            while (this.match([TokenType.COMMA])) {
-                params.push(this.expression());
-            }
-        }
-
-        this.consume(TokenType.RIGHT_PAREN);
-
-        if (expr.type === ExprType.Variable) {
-            return {
-                type: ExprType.FunctionCall,
-                id: expr.token.lexeme!,
-                params,
-            };
+            return new Tipo(new Identificador(token));
         }
 
         throw new UParserError({
@@ -152,134 +136,321 @@ export default class Parser {
         });
     }
 
-    private call() {
-        const expr = this.primary();
+    private listaIdentificadores() {
+        const identificadores: Identificador[] = [this.identificador()];
 
-        if (this.match([TokenType.LEFT_PAREN])) {
-            return this.finishCall(expr);
+        while (this.check(TokenType.COMMA)) {
+            this.advance();
+
+            identificadores.push(this.identificador());
         }
 
-        return expr;
+        return new ListaIdentificadores(identificadores);
     }
 
-    private unary(): Expr {
-        if (this.match([TokenType.MINUS])) {
-            const expr: Expr = this.unary();
+    private declVariaveis() {
+        const listaIdentificadores = this.listaIdentificadores();
+        this.consume(TokenType.COLON);
+        const tipo = this.tipo();
 
-            return {
-                type: ExprType.UnaryExpr,
-                op: UnaryOp.Minus,
-                expr,
-            };
-        }
-
-        return this.primary();
+        return new DeclVariaveis(listaIdentificadores, tipo);
     }
 
-    private multiplication() {
-        let expr: Expr = this.unary();
+    private secaoDeclVariaveis() {
+        if (this.check(TokenType.VAR)) {
+            this.advance();
+            const declVariaveis: DeclVariaveis[] = [this.declVariaveis()];
+            this.consume(TokenType.SEMICOLON);
 
-        let op: BinaryArithOp | null;
-        while ((op = this.matchAndMap(matchMulDiv))) {
-            const right = this.unary();
-
-            expr = { type: ExprType.BinaryArith, left: expr, op, right };
-        }
-
-        return expr;
-    }
-
-    private addition() {
-        let expr: Expr = this.multiplication();
-
-        let op: BinaryArithOp | null;
-        while ((op = this.matchAndMap(matchAddSub))) {
-            const right = this.multiplication();
-
-            expr = { type: ExprType.BinaryArith, left: expr, op, right };
-        }
-
-        return expr;
-    }
-
-    private comparison() {
-        let expr: Expr = this.addition();
-
-        let op: BinaryCompOp | null;
-        while ((op = this.matchAndMap(matchBinaryCompOp))) {
-            const right = this.addition();
-
-            expr = { type: ExprType.BinaryComp, left: expr, op, right };
-        }
-
-        return expr;
-    }
-
-    private and() {
-        let expr: Expr = this.comparison();
-
-        while (this.match([TokenType.AND])) {
-            const right = this.comparison();
-
-            expr = {
-                type: ExprType.BinaryLogic,
-                left: expr,
-                op: BinaryLogicOp.And,
-                right,
-            };
-        }
-
-        return expr;
-    }
-
-    private or() {
-        let expr: Expr = this.and();
-
-        while (this.match([TokenType.OR])) {
-            const right = this.and();
-
-            expr = {
-                type: ExprType.BinaryLogic,
-                left: expr,
-                op: BinaryLogicOp.Or,
-                right,
-            };
-        }
-
-        return expr;
-    }
-
-    private expression() {
-        return this.or();
-    }
-
-    private exprStmt() {
-        return this.expression();
-    }
-
-    private statement(): Stmt {
-        return { type: StmtType.ExprStmt, expr: this.exprStmt() };
-    }
-
-    public parse(): Stmt[] {
-        let stmts: Stmt[] = [];
-        let errors: Error[] = [];
-
-        while (!this.isAtEnd()) {
-            try {
-                const stmt = this.statement();
-
-                stmts.push(stmt);
-            } catch (err) {
-                const error = (err as UParserError).error;
-                errors.push(error);
+            while (this.check(TokenType.IDENTIFIER)) {
+                declVariaveis.push(this.declVariaveis());
+                this.consume(TokenType.SEMICOLON);
             }
+
+            return new SecaoDeclVariaveis(declVariaveis);
         }
 
-        if (errors.length) {
-            throw new ParserError(errors);
+        return null;
+    }
+
+    private expressao(): Expr {
+        const exprEsq = this.expressaoSimples();
+
+        let token: Token | null = null;
+        if ((token = this.matchAndMap(matchOpRelacao))) {
+            const exprDir = this.expressaoSimples();
+            return new Expr(exprEsq, token, exprDir);
         }
 
-        return stmts;
+        return new Expr(exprEsq, null, null);
+    }
+
+    private expressaoSimples(): ExprSimples {
+        const termoEsq = this.termo();
+        let exprSimples = new ExprSimples(termoEsq, null, null);
+
+        let op: Token | null = null;
+        while ((op = this.matchAndMap(matchOpExprSimples))) {
+            const termoDir = this.termo();
+
+            exprSimples = new ExprSimples(
+                new Termo(
+                    exprSimples.termoEsq.fatorEsq,
+                    exprSimples.op,
+                    exprSimples.termoDir?.fatorDir || null,
+                ),
+                op,
+                termoDir,
+            );
+        }
+
+        return exprSimples;
+    }
+
+    private listaExpr() {
+        const exprs: Expr[] = [this.expressao()];
+
+        while (this.check(TokenType.COMMA)) {
+            this.advance();
+
+            exprs.push(this.expressao());
+        }
+
+        return new ListaExpr(exprs);
+    }
+
+    private chamadaFuncao(tokenId: Token) {
+        const identificador = new Identificador(tokenId);
+        const exprs = this.listaExpr();
+
+        return new ChamadaFuncao(identificador, exprs);
+    }
+
+    private fator(): Fator {
+        const next = this.advance();
+
+        switch (next.type) {
+            case TokenType.IDENTIFIER: {
+                if (this.check(TokenType.LEFT_PAREN)) {
+                    return this.chamadaFuncao(next);
+                }
+
+                return new Variavel(new Identificador(next));
+            }
+
+            case TokenType.NUMBER: {
+                return new Numero(new Integer(next));
+            }
+
+            case TokenType.TRUE:
+                return new Logico(new Bool(true, next));
+
+            case TokenType.FALSE:
+                return new Logico(new Bool(false, next));
+
+            case TokenType.LEFT_PAREN: {
+                const expr = this.expressao();
+
+                return new Agrupamento(expr);
+            }
+
+            case TokenType.NOT: {
+                const fator = this.fator();
+
+                return new Negacao(fator);
+            }
+
+            case TokenType.MINUS: {
+                const fator = this.fator();
+
+                return new UMinus(fator);
+            }
+
+            default:
+                throw new UParserError({
+                    type: ParserErrorType.MissingExpression,
+                    line: this.currentLine,
+                });
+        }
+    }
+
+    private termo() {
+        const fatorEsq = this.fator();
+
+        let op: Token | null = null;
+        if ((op = this.matchAndMap(matchOpTermo))) {
+            const fatorDir = this.fator();
+
+            return new Termo(fatorEsq, op, fatorDir);
+        }
+
+        return new Termo(fatorEsq, null, null);
+    }
+
+    private condicional() {
+        const expr = this.expressao();
+        this.consume(TokenType.THEN);
+        const comandoThen = this.comando();
+
+        if (this.check(TokenType.ELSE)) {
+            this.advance();
+
+            const comandoElse = this.comando();
+
+            return new Condicional(expr, comandoThen, comandoElse);
+        }
+
+        return new Condicional(expr, comandoThen, null);
+    }
+
+    private repeticao() {
+        const expr = this.expressao();
+        this.consume(TokenType.DO);
+        const comando = this.comando();
+
+        return new Repeticao(expr, comando);
+    }
+
+    private leitura() {
+        this.consume(TokenType.LEFT_PAREN);
+        const identificadores = this.listaIdentificadores();
+        this.consume(TokenType.RIGHT_PAREN);
+
+        return new Leitura(identificadores);
+    }
+
+    private escrita() {
+        this.consume(TokenType.LEFT_PAREN);
+        const args = this.listaExpr();
+        this.consume(TokenType.RIGHT_PAREN);
+
+        return new Escrita(args);
+    }
+
+    private atribuicao(tokenId: Token) {
+        const identificador = new Identificador(tokenId);
+        this.consume(TokenType.ASSIGNMENT);
+        const expr = this.expressao();
+
+        return new Atribuicao(identificador, expr);
+    }
+
+    private chamadaProcedimento(tokenId: Token) {
+        const identificador = new Identificador(tokenId);
+
+        if (this.check(TokenType.LEFT_PAREN)) {
+            const listaExpr = this.listaExpr();
+            this.consume(TokenType.RIGHT_PAREN);
+
+            return new ChamadaProcedimento(identificador, listaExpr);
+        }
+
+        return new ChamadaProcedimento(identificador, new ListaExpr([]));
+    }
+
+    private comando(): Comando {
+        const next = this.advance();
+
+        switch (next.type) {
+            case TokenType.IF: {
+                return this.condicional();
+            }
+
+            case TokenType.WHILE: {
+                return this.repeticao();
+            }
+
+            case TokenType.READ: {
+                return this.leitura();
+            }
+
+            case TokenType.WRITE: {
+                return this.escrita();
+            }
+
+            case TokenType.BEGIN: {
+                return this.comandoComposto();
+            }
+
+            case TokenType.IDENTIFIER: {
+                const peek = this.peek();
+
+                if (peek.type === TokenType.ASSIGNMENT) {
+                    return this.atribuicao(next);
+                }
+
+                if (peek.type === TokenType.LEFT_PAREN) {
+                    return this.chamadaProcedimento(next);
+                }
+
+                throw new UParserError({
+                    type: ParserErrorType.UnexpectedToken,
+                    line: this.currentLine,
+                    tt: peek.type,
+                });
+            }
+
+            default:
+                throw new UParserError({
+                    type: ParserErrorType.MissingExpression,
+                    line: this.currentLine,
+                });
+        }
+    }
+
+    private comandoComposto() {
+        this.consume(TokenType.BEGIN);
+
+        const comandos: Comando[] = [this.comando()];
+        this.consume(TokenType.SEMICOLON);
+
+        while (!this.check(TokenType.END)) {
+            comandos.push(this.comando());
+            this.consume(TokenType.SEMICOLON);
+        }
+
+        this.consume(TokenType.END);
+
+        return new ComandoComposto(comandos);
+    }
+
+    private bloco() {
+        const secaoDeclVariaveis = this.secaoDeclVariaveis();
+        // const secaoDeclSubrotinas = this.secaoDeclSubrotinas();
+        const comandoComposto = this.comandoComposto();
+
+        return new Bloco(comandoComposto, secaoDeclVariaveis, null);
+    }
+
+    private identificador(): Identificador {
+        let token: Token | null;
+        if ((token = this.matchAndMap(matchIdentifier))) {
+            return new Identificador(token);
+        }
+
+        throw new UParserError({
+            type: ParserErrorType.IdentifierExpected,
+            line: this.currentLine,
+        });
+    }
+
+    public parse(): Decl {
+        const errors: Error[] = [];
+
+        // FIXME try catch
+        try {
+            this.consume(TokenType.PROGRAM);
+            const identificador = this.identificador();
+            this.consume(TokenType.SEMICOLON);
+            const bloco = this.bloco();
+            this.consume(TokenType.DOT);
+            this.consume(TokenType.EOF);
+
+            return new Programa(identificador, bloco);
+        } catch (err) {
+            errors.push(err);
+        }
+
+        throw new ParserError(errors);
     }
 }
