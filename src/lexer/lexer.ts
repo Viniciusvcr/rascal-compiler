@@ -147,7 +147,7 @@ export default class Lexer {
             case ')':
                 return this.newToken(TokenType.RIGHT_PAREN, c);
             case '.':
-                return this.newToken(TokenType.DO, c);
+                return this.newToken(TokenType.DOT, c);
             case ',':
                 return this.newToken(TokenType.COMMA, c);
             case ';':
@@ -181,11 +181,7 @@ export default class Lexer {
                     return this.newToken(TokenType.ASSIGNMENT, ':=');
                 }
 
-                throw new LexerError({
-                    type: LexerErrorType.InvalidToken,
-                    lexeme: c,
-                    placement: this.locate(),
-                });
+                return this.newToken(TokenType.COLON, c);
 
             case '/':
                 if (this.matchChar('/')) {
