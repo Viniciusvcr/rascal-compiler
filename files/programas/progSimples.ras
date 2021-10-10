@@ -1,0 +1,4 @@
+// este eh o programa mais simples que pode ser escrito em Rascal
+program programaSimples;
+begin
+end.
