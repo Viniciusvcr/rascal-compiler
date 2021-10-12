@@ -1,5 +1,5 @@
 import { Logger } from '../common';
-import { TokenType } from '../lexer/token-type';
+import { TokenType, toString } from '../lexer/token-type';
 import IError, { errorHeader } from './error';
 
 export enum ParserErrorType {
@@ -54,7 +54,7 @@ export default class ParserError implements IError {
 
                     return logger.error({
                         prefix,
-                        str: `${TokenType[error.tt]} Expected`,
+                        str: `'${toString(error.tt)}' Expected`,
                     });
                 }
 
@@ -70,6 +70,17 @@ export default class ParserError implements IError {
                     return logger.error({
                         prefix,
                         str: 'Missing an expression',
+                    });
+                }
+
+                case ParserErrorType.UnexpectedToken: {
+                    const prefix = errorHeader({ line: error.line });
+
+                    return logger.error({
+                        prefix,
+                        str: `Unexpected token '${toString(
+                            error.tt,
+                        )}' in this position`,
                     });
                 }
             }

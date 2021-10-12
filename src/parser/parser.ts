@@ -437,7 +437,7 @@ export default class Parser {
     public parse(): Decl {
         const errors: Error[] = [];
 
-        // FIXME try catch
+        // TODO sync
         try {
             this.consume(TokenType.PROGRAM);
             const identificador = this.identificador();
@@ -448,7 +448,7 @@ export default class Parser {
 
             return new Programa(identificador, bloco);
         } catch (err) {
-            errors.push(err);
+            errors.push((err as UParserError).error);
         }
 
         throw new ParserError(errors);
