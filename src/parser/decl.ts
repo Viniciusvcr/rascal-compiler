@@ -78,14 +78,14 @@ export class Tipo {
 export class SecaoDeclSubrotinas {
     type = DeclType.SecaoDeclSubrotinas;
 
-    constructor(public declaracao: DeclProcedimento | DeclFuncao) {}
+    constructor(public declaracoes: Array<DeclProcedimento | DeclFuncao>) {}
 }
 
 export class DeclProcedimento {
     type = DeclType.DeclProcedimento;
 
     constructor(
-        public identificador: Token,
+        public identificador: Identificador,
         public bloco: Bloco,
         public parametrosFormais: Nullable<ParametrosFormais>,
     ) {}
@@ -95,7 +95,7 @@ export class DeclFuncao {
     type = DeclType.DeclFuncao;
 
     constructor(
-        public identificador: Token,
+        public identificador: Identificador,
         public tipoRetorno: Tipo,
         public bloco: Bloco,
         public parametrosFormais: Nullable<ParametrosFormais>,

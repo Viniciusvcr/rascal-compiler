@@ -22,9 +22,14 @@ import {
     Bloco,
     ComandoComposto,
     Decl,
+    DeclFuncao,
+    DeclParametros,
+    DeclProcedimento,
     DeclVariaveis,
     ListaIdentificadores,
+    ParametrosFormais,
     Programa,
+    SecaoDeclSubrotinas,
     SecaoDeclVariaveis,
     Tipo,
 } from './decl';
@@ -55,10 +60,6 @@ export default class Parser {
         return this.tokens[0];
     }
 
-    private isAtEnd() {
-        return this.peek().type === TokenType.EOF;
-    }
-
     private advance() {
         const [first, ...rest] = this.tokens;
 
@@ -68,8 +69,10 @@ export default class Parser {
         return first;
     }
 
-    private check(type: TokenType) {
-        return this.peek().type === type;
+    private check(type: TokenType | TokenType[]) {
+        return Array.isArray(type)
+            ? type.includes(this.peek().type)
+            : this.peek().type === type;
     }
 
     private matchAndMap<T>(
@@ -173,6 +176,93 @@ export default class Parser {
         return null;
     }
 
+    private declParametros() {
+        if (this.check(TokenType.VAR)) {
+            this.advance();
+        }
+
+        const listaIdentificadores = this.listaIdentificadores();
+        this.consume(TokenType.COLON);
+        const tipo = this.tipo();
+
+        return new DeclParametros(listaIdentificadores, tipo);
+    }
+
+    private parametrosFormais() {
+        const declParametros: DeclParametros[] = [];
+
+        if (this.check(TokenType.VAR) || this.check(TokenType.IDENTIFIER)) {
+            declParametros.push(this.declParametros());
+
+            while (this.match([TokenType.SEMICOLON])) {
+                declParametros.push(this.declParametros());
+            }
+        }
+
+        return new ParametrosFormais(declParametros);
+    }
+
+    private declProcedimento() {
+        const identificador = this.identificador();
+
+        this.consume(TokenType.LEFT_PAREN);
+        const parametrosFormais = this.parametrosFormais();
+        this.consume(TokenType.RIGHT_PAREN);
+
+        this.consume(TokenType.SEMICOLON);
+
+        const bloco = this.bloco();
+
+        return new DeclProcedimento(identificador, bloco, parametrosFormais);
+    }
+
+    private declFuncao() {
+        const identificador = this.identificador();
+
+        this.consume(TokenType.LEFT_PAREN);
+        const parametrosFormais = this.parametrosFormais();
+        this.consume(TokenType.RIGHT_PAREN);
+
+        this.consume(TokenType.COLON);
+
+        const tipoRetorno = this.tipo();
+
+        this.consume(TokenType.SEMICOLON);
+
+        const bloco = this.bloco();
+
+        return new DeclFuncao(
+            identificador,
+            tipoRetorno,
+            bloco,
+            parametrosFormais,
+        );
+    }
+
+    private secaoDeclSubrotinas() {
+        const declaracoes: Array<DeclProcedimento | DeclFuncao> = [];
+
+        let peek = this.peek();
+        while (
+            peek.type === TokenType.PROCEDURE ||
+            peek.type === TokenType.FUNCTION
+        ) {
+            const next = this.advance();
+
+            if (next.type === TokenType.PROCEDURE) {
+                declaracoes.push(this.declProcedimento());
+            } else {
+                declaracoes.push(this.declFuncao());
+            }
+
+            this.consume(TokenType.SEMICOLON);
+
+            peek = this.peek();
+        }
+
+        return declaracoes.length ? new SecaoDeclSubrotinas(declaracoes) : null;
+    }
+
     private expressao(): Expr {
         const exprEsq = this.expressaoSimples();
 
@@ -221,9 +311,27 @@ export default class Parser {
 
     private chamadaFuncao(tokenId: Token) {
         const identificador = new Identificador(tokenId);
-        const exprs = this.listaExpr();
+        this.consume(TokenType.LEFT_PAREN);
 
-        return new ChamadaFuncao(identificador, exprs);
+        if (
+            this.check([
+                TokenType.IDENTIFIER,
+                TokenType.NUMBER,
+                TokenType.BOOLEAN,
+                TokenType.LEFT_PAREN,
+                TokenType.NOT,
+                TokenType.MINUS,
+            ])
+        ) {
+            const exprs = this.listaExpr();
+            this.consume(TokenType.RIGHT_PAREN);
+
+            return new ChamadaFuncao(identificador, exprs);
+        }
+
+        this.consume(TokenType.RIGHT_PAREN);
+
+        return new ChamadaFuncao(identificador, new ListaExpr([]));
     }
 
     private fator(): Fator {
@@ -337,14 +445,23 @@ export default class Parser {
 
     private chamadaProcedimento(tokenId: Token) {
         const identificador = new Identificador(tokenId);
-
-        if (this.check(TokenType.LEFT_PAREN)) {
+        this.consume(TokenType.LEFT_PAREN);
+        if (
+            this.check([
+                TokenType.IDENTIFIER,
+                TokenType.NUMBER,
+                TokenType.BOOLEAN,
+                TokenType.LEFT_PAREN,
+                TokenType.NOT,
+                TokenType.MINUS,
+            ])
+        ) {
             const listaExpr = this.listaExpr();
             this.consume(TokenType.RIGHT_PAREN);
-
             return new ChamadaProcedimento(identificador, listaExpr);
         }
 
+        this.consume(TokenType.RIGHT_PAREN);
         return new ChamadaProcedimento(identificador, new ListaExpr([]));
     }
 
@@ -416,10 +533,14 @@ export default class Parser {
 
     private bloco() {
         const secaoDeclVariaveis = this.secaoDeclVariaveis();
-        // const secaoDeclSubrotinas = this.secaoDeclSubrotinas();
+        const secaoDeclSubrotinas = this.secaoDeclSubrotinas();
         const comandoComposto = this.comandoComposto();
 
-        return new Bloco(comandoComposto, secaoDeclVariaveis, null);
+        return new Bloco(
+            comandoComposto,
+            secaoDeclVariaveis,
+            secaoDeclSubrotinas,
+        );
     }
 
     private identificador(): Identificador {
