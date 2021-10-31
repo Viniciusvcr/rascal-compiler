@@ -177,7 +177,9 @@ export default class Parser {
     }
 
     private declParametros() {
-        if (this.check(TokenType.VAR)) {
+        let ref = this.check(TokenType.VAR);
+
+        if (ref) {
             this.advance();
         }
 
@@ -185,7 +187,7 @@ export default class Parser {
         this.consume(TokenType.COLON);
         const tipo = this.tipo();
 
-        return new DeclParametros(listaIdentificadores, tipo);
+        return new DeclParametros(listaIdentificadores, tipo, ref);
     }
 
     private parametrosFormais() {
@@ -211,7 +213,7 @@ export default class Parser {
 
         this.consume(TokenType.SEMICOLON);
 
-        const bloco = this.bloco();
+        const bloco = this.blocoFuncProc();
 
         return new DeclProcedimento(identificador, bloco, parametrosFormais);
     }
@@ -229,7 +231,7 @@ export default class Parser {
 
         this.consume(TokenType.SEMICOLON);
 
-        const bloco = this.bloco();
+        const bloco = this.blocoFuncProc();
 
         return new DeclFuncao(
             identificador,
@@ -358,6 +360,7 @@ export default class Parser {
 
             case TokenType.LEFT_PAREN: {
                 const expr = this.expressao();
+                this.consume(TokenType.RIGHT_PAREN);
 
                 return new Agrupamento(expr);
             }
@@ -516,8 +519,6 @@ export default class Parser {
     }
 
     private comandoComposto() {
-        this.consume(TokenType.BEGIN);
-
         const comandos: Comando[] = [this.comando()];
         this.consume(TokenType.SEMICOLON);
 
@@ -534,6 +535,9 @@ export default class Parser {
     private bloco() {
         const secaoDeclVariaveis = this.secaoDeclVariaveis();
         const secaoDeclSubrotinas = this.secaoDeclSubrotinas();
+
+        this.consume(TokenType.BEGIN);
+
         const comandoComposto = this.comandoComposto();
 
         return new Bloco(
@@ -541,6 +545,16 @@ export default class Parser {
             secaoDeclVariaveis,
             secaoDeclSubrotinas,
         );
+    }
+
+    private blocoFuncProc() {
+        const secaoDeclVariaveis = this.secaoDeclVariaveis();
+
+        this.consume(TokenType.BEGIN);
+
+        const comandoComposto = this.comandoComposto();
+
+        return new Bloco(comandoComposto, secaoDeclVariaveis, null);
     }
 
     private identificador(): Identificador {
@@ -555,7 +569,7 @@ export default class Parser {
         });
     }
 
-    public parse(): Decl {
+    public parse(): Programa {
         const errors: Error[] = [];
 
         // TODO sync

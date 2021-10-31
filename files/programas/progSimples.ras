@@ -1,5 +1,5 @@
 // este eh o programa mais simples que pode ser escrito em Rascal
 program programaSimples;
 begin
-  write(1)
+  write(0)
 end.

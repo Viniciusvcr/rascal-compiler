@@ -20,6 +20,7 @@ import {
     SecaoDeclVariaveis,
     Tipo,
 } from '../parser/decl';
+import { FatorType } from '../parser/fator';
 import Scope from './scope';
 import {
     fromSymbolItemType,
@@ -130,8 +131,7 @@ export default class SemanticAnalyzer {
             for (const identifier of param.identificadores.identificadores) {
                 const lexeme = identifier.lexeme!;
 
-                // TODO implement ref
-                params.push({ type, ref: false });
+                params.push({ type, ref: param.ref });
                 this.scope.current.addToSymbolTable(
                     lexeme,
                     fromUsableType(type),
@@ -172,8 +172,7 @@ export default class SemanticAnalyzer {
             for (const identifier of param.identificadores.identificadores) {
                 const lexeme = identifier.lexeme!;
 
-                // TODO implement ref
-                params.push({ type, ref: false });
+                params.push({ type, ref: param.ref });
                 this.scope.current.addToSymbolTable(
                     lexeme,
                     fromUsableType(type),
@@ -248,6 +247,7 @@ export default class SemanticAnalyzer {
             }
 
             for (const i in command.args.exprs) {
+                console.log('index in ChamadaProcedimento', i);
                 const arg = command.args.exprs[i];
                 const param = proc.params[i];
 
@@ -259,6 +259,14 @@ export default class SemanticAnalyzer {
                         left: exprType,
                         rigth: param.type,
                         placement: command.identificador.token.placement,
+                    });
+                }
+
+                if (param.ref && !this.argIsVariable(arg)) {
+                    throw new SemanticError({
+                        type: SemanticErrorType.ExpectedReference,
+                        placement: command.identificador.token.placement,
+                        index: +i,
                     });
                 }
             }
@@ -317,6 +325,10 @@ export default class SemanticAnalyzer {
         if (command instanceof ComandoComposto) {
             this.analyzeComandoComposto(command);
         }
+    }
+
+    private argIsVariable(arg: Expr) {
+        return arg.exprEsq.termoEsq.fatorEsq.type === FatorType.Variavel;
     }
 
     private analyzeComandoComposto(commands: ComandoComposto) {

@@ -36,7 +36,7 @@ export default class Scope {
 
     public addScope() {
         if (this.scopes.length < this.MAX_SCOPE_DEPTH) {
-            this.scopes.push(new ScopeItem());
+            return this.scopes.push(new ScopeItem());
         }
 
         throw new Error('MAX_SCOPE_DEPTH reached');

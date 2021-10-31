@@ -11,6 +11,7 @@ export enum SemanticErrorType {
     NotCallable,
     MismatchedTypes,
     ConditionalNotBoolean,
+    ExpectedReference,
 }
 
 export interface TypeNotDefined {
@@ -59,6 +60,12 @@ export interface ConditionalNotBoolean {
     conditionalType: 'if' | 'while';
 }
 
+export interface ExpectedReference {
+    type: SemanticErrorType.ExpectedReference;
+    placement: Placement;
+    index: number;
+}
+
 export type Error =
     | TypeNotDefined
     | VariableAlreadyExists
@@ -66,7 +73,8 @@ export type Error =
     | ArgsAndParamsLengthNotEqual
     | NotCallable
     | MismatchedTypes
-    | ConditionalNotBoolean;
+    | ConditionalNotBoolean
+    | ExpectedReference;
 export class SemanticError implements IError {
     constructor(private readonly error: Error) {}
 
@@ -134,6 +142,15 @@ export class SemanticError implements IError {
                 return logger.error({
                     prefix,
                     str: `The ${this.error.conditionalType} conditional does not resolve to a boolean`,
+                });
+            }
+
+            case SemanticErrorType.ExpectedReference: {
+                const prefix = errorHeader(this.error.placement);
+
+                return logger.error({
+                    prefix,
+                    str: `Expected argument on index ${this.error.index} to be a reference`,
                 });
             }
         }

@@ -3,6 +3,8 @@ import ParserError from './error/parser';
 import { Lexer, readInputFile } from './lexer';
 import Parser from './parser/parser';
 import util from 'util';
+import SemanticAnalyzer from './semantic/semantic';
+import { SemanticError } from './error/semantic';
 
 function deepLog(toLog: any) {
     console.log(
@@ -24,12 +26,16 @@ function main() {
         const parser = new Parser(tokens);
 
         const program = parser.parse();
-        deepLog(program);
+
+        const analyzer = new SemanticAnalyzer(program);
+        analyzer.analyze();
+        // deepLog(program);
     } catch (err) {
         if (
             err instanceof IOError ||
             err instanceof LexerError ||
-            err instanceof ParserError
+            err instanceof ParserError ||
+            err instanceof SemanticError
         ) {
             return err.log();
         }

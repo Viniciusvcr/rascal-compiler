@@ -114,6 +114,7 @@ export class DeclParametros {
     constructor(
         public identificadores: ListaIdentificadores,
         public tipo: Tipo,
+        public ref: boolean,
     ) {}
 }
 
