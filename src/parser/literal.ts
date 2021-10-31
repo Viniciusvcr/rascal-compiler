@@ -1,3 +1,4 @@
+import { Nullable } from '../common/util';
 import { Token } from '../lexer';
 import { TokenType } from '../lexer/token-type';
 
@@ -8,10 +9,11 @@ export enum ValueType {
 
 export class Integer {
     type = ValueType.Integer;
-    literal: number;
 
-    constructor(public token: Token) {
-        this.literal = parseInt(token.lexeme ?? '0');
+    constructor(public token: Token) {}
+
+    get literal() {
+        return parseInt(this.token.lexeme ?? '');
     }
 }
 
@@ -25,6 +27,10 @@ export type Value = Integer | Bool;
 
 export class Identificador {
     constructor(public token: Token) {}
+
+    get lexeme(): Nullable<string> {
+        return this.token.lexeme;
+    }
 }
 
 export function matchIdentifier(tt: TokenType, t: Token): Token | null {
