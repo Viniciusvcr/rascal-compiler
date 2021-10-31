@@ -37,6 +37,7 @@ import {
     Agrupamento,
     ChamadaFuncao,
     Fator,
+    FatorType,
     Logico,
     Negacao,
     Numero,
@@ -289,7 +290,7 @@ export default class Parser {
                 new Termo(
                     exprSimples.termoEsq.fatorEsq,
                     exprSimples.op,
-                    exprSimples.termoDir?.fatorDir || null,
+                    exprSimples.termoDir?.fatorEsq ?? null,
                 ),
                 op,
                 termoDir,
@@ -389,6 +390,7 @@ export default class Parser {
         const fatorEsq = this.fator();
 
         let op: Token | null = null;
+        // FIXME change to while
         if ((op = this.matchAndMap(matchOpTermo))) {
             const fatorDir = this.fator();
 

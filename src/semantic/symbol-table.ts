@@ -28,13 +28,13 @@ export interface FunProcParams {
     ref: boolean;
 }
 
-interface Fun {
+export interface Fun {
     type: SymbolItemType.Fun;
     params: FunProcParams[];
     returnType: UsableType;
 }
 
-interface Procedure {
+export interface Procedure {
     type: SymbolItemType.Procedure;
     params: FunProcParams[];
 }

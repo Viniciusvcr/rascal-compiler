@@ -28,8 +28,8 @@ export type Value = Integer | Bool;
 export class Identificador {
     constructor(public token: Token) {}
 
-    get lexeme(): Nullable<string> {
-        return this.token.lexeme;
+    get lexeme(): string {
+        return this.token.lexeme!;
     }
 }
 

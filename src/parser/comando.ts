@@ -1,5 +1,6 @@
 import { Nullable } from '../common/util';
 import { Token } from '../lexer';
+import { Placement } from '../lexer/token';
 import { ComandoComposto, ListaIdentificadores } from './decl';
 import { Fator } from './fator';
 import { Identificador } from './literal';
@@ -81,6 +82,26 @@ export class Expr {
         public relacao: Nullable<Token>,
         public exprDir: Nullable<ExprSimples>,
     ) {}
+
+    get exprEsqPlacement(): Placement {
+        return this.exprEsq.placement;
+    }
+
+    get opPlacement(): Nullable<Placement> {
+        return this.relacao?.placement ?? null;
+    }
+
+    get exprDirPlacement(): Nullable<Placement> {
+        return this.exprDir?.placement ?? null;
+    }
+
+    get placement(): Placement {
+        return new Placement(
+            this.exprEsqPlacement.line,
+            this.exprEsqPlacement.startsAt,
+            this.exprDirPlacement?.endsAt ?? this.exprEsqPlacement.endsAt,
+        );
+    }
 }
 
 export class ExprSimples {
@@ -91,6 +112,26 @@ export class ExprSimples {
         public op: Nullable<Token>,
         public termoDir: Nullable<Termo>,
     ) {}
+
+    get termoEsqPlacement(): Placement {
+        return this.termoEsq.placement;
+    }
+
+    get opPlacement(): Nullable<Placement> {
+        return this.op?.placement ?? null;
+    }
+
+    get termoDirPlacement(): Nullable<Placement> {
+        return this.termoDir?.placement ?? null;
+    }
+
+    get placement(): Placement {
+        return new Placement(
+            this.termoEsqPlacement.line,
+            this.termoEsqPlacement.startsAt,
+            this.termoDirPlacement?.endsAt ?? this.termoEsqPlacement.endsAt,
+        );
+    }
 }
 
 export class Termo {
@@ -101,4 +142,24 @@ export class Termo {
         public op: Nullable<Token>,
         public fatorDir: Nullable<Fator>,
     ) {}
+
+    get fatorEsqPlacement(): Placement {
+        return this.fatorEsq.placement;
+    }
+
+    get opPlacement(): Nullable<Placement> {
+        return this.op?.placement ?? null;
+    }
+
+    get fatorDirPlacement(): Nullable<Placement> {
+        return this.fatorDir?.placement ?? null;
+    }
+
+    get placement(): Placement {
+        return new Placement(
+            this.fatorEsqPlacement.line,
+            this.fatorEsqPlacement.startsAt,
+            this.fatorDirPlacement?.endsAt ?? this.fatorEsqPlacement.endsAt,
+        );
+    }
 }

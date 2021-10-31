@@ -8,4 +8,6 @@ begin
 // programa sem corpo de comandos, 
 // apenas para testar a declaracao de variaveis.
 
+write(0);
+
 end.

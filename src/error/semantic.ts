@@ -54,10 +54,10 @@ export interface MismatchedTypes {
     placement: Placement;
 }
 
-// TODO add placement to this
 export interface ConditionalNotBoolean {
     type: SemanticErrorType.ConditionalNotBoolean;
     conditionalType: 'if' | 'while';
+    placement: Placement;
 }
 
 export interface ExpectedReference {
@@ -137,7 +137,7 @@ export class SemanticError implements IError {
             }
 
             case SemanticErrorType.ConditionalNotBoolean: {
-                const prefix = errorHeader({});
+                const prefix = errorHeader(this.error.placement);
 
                 return logger.error({
                     prefix,

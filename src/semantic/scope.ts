@@ -1,10 +1,18 @@
-import Table, { SymbolItem, UsableType } from './symbol-table';
+import { Nullable } from '../common/util';
+import Table, {
+    fromUsableType,
+    Fun,
+    Procedure,
+    SymbolItem,
+    UsableType,
+} from './symbol-table';
 
 export class ScopeItem {
     private readonly symbolTable = new Table<SymbolItem>();
     private readonly declaredTypes = new Table<UsableType>();
+    private _currentFunctionAnalyzingName: Nullable<string> = null;
 
-    constructor() {
+    constructor(private readonly parentScope: Nullable<ScopeItem>) {
         this.declaredTypes.insert('integer', UsableType.Integer);
         this.declaredTypes.insert('boolean', UsableType.Boolean);
     }
@@ -13,8 +21,14 @@ export class ScopeItem {
         this.symbolTable.insert(id, item);
     }
 
-    getFromSymbolTable(id: string) {
-        return this.symbolTable.get(id);
+    getFromSymbolTable(id: string): Nullable<SymbolItem> {
+        const symbol = this.symbolTable.get(id);
+
+        if (!symbol && this.parentScope) {
+            return this.parentScope.getFromSymbolTable(id);
+        }
+
+        return symbol ?? null;
     }
 
     existsInSymbolTable(id: string) {
@@ -28,6 +42,14 @@ export class ScopeItem {
     getType(id: string) {
         return this.declaredTypes.get(id)!;
     }
+
+    set currentFunctionAnalyzingName(id: Nullable<string>) {
+        this._currentFunctionAnalyzingName = id;
+    }
+
+    get currentFunctionAnalyzingName() {
+        return this._currentFunctionAnalyzingName;
+    }
 }
 
 export default class Scope {
@@ -36,7 +58,7 @@ export default class Scope {
 
     public addScope() {
         if (this.scopes.length < this.MAX_SCOPE_DEPTH) {
-            return this.scopes.push(new ScopeItem());
+            return this.scopes.push(new ScopeItem(this.current));
         }
 
         throw new Error('MAX_SCOPE_DEPTH reached');
