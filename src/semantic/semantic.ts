@@ -1,3 +1,4 @@
+import CodeGenerator from '../code-generator/code-generator';
 import { Nullable } from '../common/util';
 import { SemanticError, SemanticErrorType } from '../error/semantic';
 import { TokenType } from '../lexer/token-type';
@@ -46,6 +47,7 @@ import {
 
 export default class SemanticAnalyzer {
     private scope = new Scope();
+    private code = new CodeGenerator();
 
     constructor(private readonly program: Programa) {}
 
@@ -56,7 +58,9 @@ export default class SemanticAnalyzer {
             { type: SymbolItemType.Program },
         );
 
+        this.code.addINPP();
         this.analyzeBloco(this.program.bloco);
+        this.code.addPARA();
     }
 
     private analyzeBloco(bloco: Bloco) {
@@ -90,6 +94,8 @@ export default class SemanticAnalyzer {
                             : { type: SymbolItemType.Boolean },
                     );
                 }
+
+                this.code.addAMEM(idList.identificadores.length);
             }
         }
     }
