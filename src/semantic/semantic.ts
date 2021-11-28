@@ -55,7 +55,7 @@ export default class SemanticAnalyzer {
         this.scope.addScope();
         this.scope.current.addToSymbolTable(
             this.program.identificador.lexeme!,
-            { type: SymbolItemType.Program },
+            { type: SymbolItemType.Program, lexicalLevel: 0, index: 0 },
         );
 
         this.code.addINPP();
@@ -75,6 +75,7 @@ export default class SemanticAnalyzer {
         if (declVariaveis) {
             const decls = declVariaveis.variaveis;
 
+            let counter = 0;
             for (const { identificadores: idList, tipo } of decls) {
                 const type = this.analyzeType(tipo);
 
@@ -92,8 +93,16 @@ export default class SemanticAnalyzer {
                     this.scope.current.addToSymbolTable(
                         lexeme,
                         type === UsableType.Integer
-                            ? { type: SymbolItemType.Integer }
-                            : { type: SymbolItemType.Boolean },
+                            ? {
+                                  type: SymbolItemType.Integer,
+                                  lexicalLevel: this.scope.currentLexicalLevel,
+                                  index: counter++,
+                              }
+                            : {
+                                  type: SymbolItemType.Boolean,
+                                  lexicalLevel: this.scope.currentLexicalLevel,
+                                  index: counter++,
+                              },
                     );
                 }
 
@@ -120,19 +129,24 @@ export default class SemanticAnalyzer {
         declSubrotinas: Nullable<SecaoDeclSubrotinas>,
     ) {
         if (declSubrotinas) {
+            this.code.addDSVS(this.code.currentLabel);
             const decls = declSubrotinas.declaracoes;
 
+            const subroutineLabel = this.code.newLabel();
             for (const decl of decls) {
                 if (decl instanceof DeclProcedimento) {
-                    this.analyzeProcedimento(decl);
+                    this.analyzeProcedimento(decl, subroutineLabel);
                 } else {
-                    this.analyzeFuncao(decl);
+                    this.analyzeFuncao(decl, subroutineLabel);
                 }
             }
         }
     }
 
-    private analyzeProcedimento(procedure: DeclProcedimento) {
+    private analyzeProcedimento(
+        procedure: DeclProcedimento,
+        subroutineLabel: number,
+    ) {
         const lexeme = procedure.identificador.lexeme;
 
         if (this.scope.current.existsInSymbolTable(lexeme)) {
@@ -147,24 +161,41 @@ export default class SemanticAnalyzer {
         const formalParams = procedure.parametrosFormais?.declParametros ?? [];
         const params: FunProcParams[] = [];
 
+        let paramIndex = 0;
         for (const param of formalParams) {
             const type = this.analyzeType(param.tipo);
 
             for (const identifier of param.identificadores.identificadores) {
                 const lexeme = identifier.lexeme;
 
-                params.push({ type, ref: param.ref });
+                params.push({
+                    type,
+                    ref: param.ref,
+                    lexicalLevel: this.scope.currentLexicalLevel,
+                    index: -3 - (formalParams.length - paramIndex),
+                });
                 this.scope.current.addToSymbolTable(
                     lexeme,
-                    fromUsableType(type),
+                    fromUsableType(
+                        type,
+                        this.scope.currentLexicalLevel,
+                        this.code.currentLabel,
+                    ),
                 );
             }
+
+            paramIndex++;
         }
         // Add to current scope for recursion
         this.scope.current.addToSymbolTable(lexeme, {
             type: SymbolItemType.Procedure,
             params,
+            lexicalLevel: this.scope.currentLexicalLevel,
+            index: subroutineLabel,
         });
+
+        this.code.addLabel(this.code.newLabel());
+        this.code.addENPR(this.scope.currentLexicalLevel);
 
         this.analyzeBloco(procedure.bloco);
         this.scope.removeScope();
@@ -173,10 +204,12 @@ export default class SemanticAnalyzer {
         this.scope.current.addToSymbolTable(lexeme, {
             type: SymbolItemType.Procedure,
             params,
+            lexicalLevel: this.scope.currentLexicalLevel,
+            index: subroutineLabel,
         });
     }
 
-    private analyzeFuncao(procedure: DeclFuncao) {
+    private analyzeFuncao(procedure: DeclFuncao, subroutineLabel: number) {
         const lexeme = procedure.identificador.lexeme;
 
         if (this.scope.current.existsInSymbolTable(lexeme)) {
@@ -195,18 +228,30 @@ export default class SemanticAnalyzer {
         const formalParams = procedure.parametrosFormais?.declParametros ?? [];
         const params: FunProcParams[] = [];
 
+        let paramIndex = 0;
         for (const param of formalParams) {
             const type = this.analyzeType(param.tipo);
 
             for (const identifier of param.identificadores.identificadores) {
                 const lexeme = identifier.lexeme;
 
-                params.push({ type, ref: param.ref });
+                params.push({
+                    type,
+                    ref: param.ref,
+                    lexicalLevel: this.scope.currentLexicalLevel,
+                    index: -3 - (formalParams.length - paramIndex),
+                });
                 this.scope.current.addToSymbolTable(
                     lexeme,
-                    fromUsableType(type),
+                    fromUsableType(
+                        type,
+                        this.scope.currentLexicalLevel,
+                        this.code.currentLabel,
+                    ),
                 );
             }
+
+            paramIndex++;
         }
 
         // Add to current scope for recursion
@@ -214,7 +259,12 @@ export default class SemanticAnalyzer {
             type: SymbolItemType.Fun,
             params,
             returnType,
+            lexicalLevel: this.scope.currentLexicalLevel,
+            index: subroutineLabel,
         });
+
+        this.code.addLabel(this.code.newLabel());
+        this.code.addENPR(this.scope.currentLexicalLevel);
 
         this.analyzeBloco(procedure.bloco);
         this.scope.removeScope();
@@ -224,6 +274,8 @@ export default class SemanticAnalyzer {
             type: SymbolItemType.Fun,
             params,
             returnType,
+            lexicalLevel: this.scope.currentLexicalLevel,
+            index: subroutineLabel,
         });
     }
 

@@ -71,4 +71,8 @@ export default class Scope {
     get current() {
         return this.scopes[this.scopes.length - 1];
     }
+
+    get currentLexicalLevel() {
+        return this.scopes.length - 1;
+    }
 }

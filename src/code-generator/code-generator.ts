@@ -8,8 +8,12 @@ export default class CodeGenerator {
         return this._generatedCode;
     }
 
-    get newLabel() {
+    newLabel() {
         return this.labelCounter++;
+    }
+
+    get currentLabel() {
+        return this.labelCounter;
     }
 
     static saveCode(codeArray: string[], filename?: string) {

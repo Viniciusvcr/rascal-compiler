@@ -11,40 +11,49 @@ export enum UsableType {
     Boolean = 'boolean',
 }
 
-interface Program {
+interface CodeGeneratorProps {
+    index: number;
+    lexicalLevel: number;
+}
+
+interface Program extends CodeGeneratorProps {
     type: SymbolItemType.Program;
 }
 
-interface Int {
+interface Int extends CodeGeneratorProps {
     type: SymbolItemType.Integer;
 }
 
-interface Bool {
+interface Bool extends CodeGeneratorProps {
     type: SymbolItemType.Boolean;
 }
 
-export interface FunProcParams {
+export interface FunProcParams extends CodeGeneratorProps {
     type: UsableType;
     ref: boolean;
 }
 
-export interface Fun {
+export interface Fun extends CodeGeneratorProps {
     type: SymbolItemType.Fun;
     params: FunProcParams[];
     returnType: UsableType;
 }
 
-export interface Procedure {
+export interface Procedure extends CodeGeneratorProps {
     type: SymbolItemType.Procedure;
     params: FunProcParams[];
 }
 
 export type SymbolItem = Program | Int | Bool | Fun | Procedure;
 
-export function fromUsableType(type: UsableType): SymbolItem {
+export function fromUsableType(
+    type: UsableType,
+    index: number,
+    lexicalLevel: number,
+): SymbolItem {
     return type === UsableType.Integer
-        ? { type: SymbolItemType.Integer }
-        : { type: SymbolItemType.Integer };
+        ? { type: SymbolItemType.Integer, index, lexicalLevel }
+        : { type: SymbolItemType.Integer, index, lexicalLevel };
 }
 
 export function fromSymbolItemType(type: SymbolItemType): UsableType {
