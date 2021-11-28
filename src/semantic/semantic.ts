@@ -394,7 +394,7 @@ export default class SemanticAnalyzer {
                 });
             }
 
-            const elseLabel = this.code.currentLabel();
+            const elseLabel = this.code.newLabel();
             const outOfIfLabel = this.code.newLabel();
             const ifLabel = this.code.newLabel();
 

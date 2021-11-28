@@ -3,7 +3,7 @@ import { Nullable } from '../common/util';
 
 export default class CodeGenerator {
     private _generatedCode: string[] = [];
-    private labelCounter = 0;
+    private labelCounter = -1;
 
     get generatedCode() {
         return this._generatedCode;
