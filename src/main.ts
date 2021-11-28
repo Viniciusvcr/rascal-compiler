@@ -7,17 +7,6 @@ import SemanticAnalyzer from './semantic/semantic';
 import { SemanticError } from './error/semantic';
 import CodeGenerator from './code-generator/code-generator';
 
-// TODO remove function
-function deepLog(toLog: any) {
-    console.log(
-        util.inspect(toLog, {
-            showHidden: false,
-            depth: null,
-            colors: true,
-        }),
-    );
-}
-
 function main() {
     try {
         const sourceCode = readInputFile();
