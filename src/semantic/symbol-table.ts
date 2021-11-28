@@ -53,8 +53,8 @@ export function fromUsableType(
     lexicalLevel: number,
 ): SymbolItem {
     return type === UsableType.Integer
-        ? { type: SymbolItemType.Integer, index, lexicalLevel }
-        : { type: SymbolItemType.Integer, index, lexicalLevel };
+        ? { type: SymbolItemType.Integer, index, lexicalLevel, isParam: true }
+        : { type: SymbolItemType.Boolean, index, lexicalLevel, isParam: true };
 }
 
 export function fromSymbolItemType(type: SymbolItemType): UsableType {

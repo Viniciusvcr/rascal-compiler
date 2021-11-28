@@ -130,17 +130,21 @@ export default class SemanticAnalyzer {
         declSubrotinas: Nullable<SecaoDeclSubrotinas>,
     ) {
         if (declSubrotinas) {
-            this.code.addDSVS(this.code.currentLabel());
+            const mainLabel = this.code.newLabel();
+
+            this.code.addDSVS(mainLabel);
             const decls = declSubrotinas.declaracoes;
 
-            const subroutineLabel = this.code.newLabel();
             for (const decl of decls) {
+                const subroutineLabel = this.code.newLabel();
                 if (decl instanceof DeclProcedimento) {
                     this.analyzeProcedimento(decl, subroutineLabel);
                 } else {
                     this.analyzeFuncao(decl, subroutineLabel);
                 }
             }
+
+            this.code.addLabel(mainLabel);
         }
     }
 
@@ -180,8 +184,8 @@ export default class SemanticAnalyzer {
                     lexeme,
                     fromUsableType(
                         type,
+                        -3 - (formalParams.length - paramIndex),
                         this.scope.currentLexicalLevel,
-                        this.code.currentLabel(),
                     ),
                 );
             }
@@ -196,11 +200,14 @@ export default class SemanticAnalyzer {
             index: subroutineLabel,
         });
 
-        this.code.addLabel(this.code.newLabel());
+        this.code.addLabel(subroutineLabel);
         this.code.addENPR(this.scope.currentLexicalLevel);
 
         this.analyzeBloco(procedure.bloco);
+        const currentLexicalLevel = this.scope.currentLexicalLevel;
         this.scope.removeScope(this.code);
+
+        this.code.addRTPR(currentLexicalLevel, formalParams.length);
 
         // Add to outside scope for normal calls
         this.scope.current.addToSymbolTable(lexeme, {
@@ -248,8 +255,8 @@ export default class SemanticAnalyzer {
                     lexeme,
                     fromUsableType(
                         type,
+                        -3 - (formalParams.length - paramIndex),
                         this.scope.currentLexicalLevel,
-                        this.code.currentLabel(),
                     ),
                 );
             }
@@ -266,11 +273,14 @@ export default class SemanticAnalyzer {
             index: subroutineLabel,
         });
 
-        this.code.addLabel(this.code.newLabel());
+        this.code.addLabel(subroutineLabel);
         this.code.addENPR(this.scope.currentLexicalLevel);
 
         this.analyzeBloco(procedure.bloco);
+        const currentLexicalLevel = this.scope.currentLexicalLevel;
         this.scope.removeScope(this.code);
+
+        this.code.addRTPR(currentLexicalLevel, formalParams.length);
 
         // Add to outside scope for normal calls
         this.scope.current.addToSymbolTable(lexeme, {
@@ -309,10 +319,7 @@ export default class SemanticAnalyzer {
                     -4 - (variable as Fun).params.length,
                 );
             } else {
-                this.code.addARMZ(
-                    this.scope.currentLexicalLevel,
-                    variable.index,
-                );
+                this.code.addARMZ(variable.lexicalLevel, variable.index);
             }
 
             if (realLeftType !== exprType) {
@@ -408,7 +415,7 @@ export default class SemanticAnalyzer {
                 this.analyzeComando(command.comandoElse);
                 this.code.addLabel(outOfIfLabel);
             } else {
-                this.code.addLabel(ifLabel);
+                this.code.addLabel(elseLabel);
             }
         }
 
