@@ -130,7 +130,7 @@ export default class SemanticAnalyzer {
         declSubrotinas: Nullable<SecaoDeclSubrotinas>,
     ) {
         if (declSubrotinas) {
-            this.code.addDSVS(this.code.currentLabel);
+            this.code.addDSVS(this.code.currentLabel());
             const decls = declSubrotinas.declaracoes;
 
             const subroutineLabel = this.code.newLabel();
@@ -181,7 +181,7 @@ export default class SemanticAnalyzer {
                     fromUsableType(
                         type,
                         this.scope.currentLexicalLevel,
-                        this.code.currentLabel,
+                        this.code.currentLabel(),
                     ),
                 );
             }
@@ -249,7 +249,7 @@ export default class SemanticAnalyzer {
                     fromUsableType(
                         type,
                         this.scope.currentLexicalLevel,
-                        this.code.currentLabel,
+                        this.code.currentLabel(),
                     ),
                 );
             }
@@ -394,18 +394,19 @@ export default class SemanticAnalyzer {
                 });
             }
 
-            const ifLabel = this.code.currentLabel;
-            const elseLabel = this.code.newLabel();
+            const elseLabel = this.code.currentLabel();
+            const outOfIfLabel = this.code.newLabel();
+            const ifLabel = this.code.newLabel();
 
             this.code.addDSFV(elseLabel);
 
             this.analyzeComando(command.comandoThen);
 
             if (command.comandoElse) {
-                this.code.addDSVS(this.code.newLabel());
-                this.code.addLabel(ifLabel);
-                this.analyzeComando(command.comandoElse);
+                this.code.addDSVS(outOfIfLabel);
                 this.code.addLabel(elseLabel);
+                this.analyzeComando(command.comandoElse);
+                this.code.addLabel(outOfIfLabel);
             } else {
                 this.code.addLabel(ifLabel);
             }

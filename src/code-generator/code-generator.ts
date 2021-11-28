@@ -1,4 +1,5 @@
 import { writeFileSync } from 'fs';
+import { Nullable } from '../common/util';
 
 export default class CodeGenerator {
     private _generatedCode: string[] = [];
@@ -9,10 +10,10 @@ export default class CodeGenerator {
     }
 
     newLabel() {
-        return this.labelCounter++;
+        return ++this.labelCounter;
     }
 
-    get currentLabel() {
+    currentLabel() {
         return this.labelCounter;
     }
 
@@ -48,8 +49,8 @@ export default class CodeGenerator {
         this._generatedCode.push(`DMEM ${size}`);
     }
 
-    addLabel(label?: string | number) {
-        if (label) {
+    addLabel(label: Nullable<string | number>) {
+        if (label !== null) {
             this._generatedCode.push(`L${label}: NADA`);
 
             return label;
