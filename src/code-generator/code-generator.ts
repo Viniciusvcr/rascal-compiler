@@ -1,3 +1,5 @@
+import { writeFileSync } from 'fs';
+
 export default class CodeGenerator {
     private _generatedCode: string[] = [];
     private labelCounter = 0;
@@ -8,6 +10,13 @@ export default class CodeGenerator {
 
     get newLabel() {
         return this.labelCounter++;
+    }
+
+    static saveCode(codeArray: string[], filename?: string) {
+        const defaultName = 'a.out';
+        const joinedCode = codeArray.join('\n');
+
+        writeFileSync(filename ?? defaultName, joinedCode);
     }
 
     addINPP() {

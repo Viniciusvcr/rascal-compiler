@@ -5,7 +5,9 @@ import Parser from './parser/parser';
 import util from 'util';
 import SemanticAnalyzer from './semantic/semantic';
 import { SemanticError } from './error/semantic';
+import CodeGenerator from './code-generator/code-generator';
 
+// TODO remove function
 function deepLog(toLog: any) {
     console.log(
         util.inspect(toLog, {
@@ -28,8 +30,9 @@ function main() {
         const program = parser.parse();
 
         const analyzer = new SemanticAnalyzer(program);
-        analyzer.analyze();
-        // deepLog(program);
+        const generatedCode = analyzer.analyze();
+
+        CodeGenerator.saveCode(generatedCode);
     } catch (err) {
         if (
             err instanceof IOError ||

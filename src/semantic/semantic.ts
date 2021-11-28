@@ -61,6 +61,8 @@ export default class SemanticAnalyzer {
         this.code.addINPP();
         this.analyzeBloco(this.program.bloco);
         this.code.addPARA();
+
+        return this.code.generatedCode;
     }
 
     private analyzeBloco(bloco: Bloco) {
