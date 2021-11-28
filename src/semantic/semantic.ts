@@ -60,6 +60,7 @@ export default class SemanticAnalyzer {
 
         this.code.addINPP();
         this.analyzeBloco(this.program.bloco);
+        this.code.addDMEM(this.scope.current.allVariablesSize);
         this.code.addPARA();
 
         return this.code.generatedCode;
@@ -173,6 +174,7 @@ export default class SemanticAnalyzer {
                     ref: param.ref,
                     lexicalLevel: this.scope.currentLexicalLevel,
                     index: -3 - (formalParams.length - paramIndex),
+                    isParam: true,
                 });
                 this.scope.current.addToSymbolTable(
                     lexeme,
@@ -198,7 +200,7 @@ export default class SemanticAnalyzer {
         this.code.addENPR(this.scope.currentLexicalLevel);
 
         this.analyzeBloco(procedure.bloco);
-        this.scope.removeScope();
+        this.scope.removeScope(this.code);
 
         // Add to outside scope for normal calls
         this.scope.current.addToSymbolTable(lexeme, {
@@ -240,6 +242,7 @@ export default class SemanticAnalyzer {
                     ref: param.ref,
                     lexicalLevel: this.scope.currentLexicalLevel,
                     index: -3 - (formalParams.length - paramIndex),
+                    isParam: true,
                 });
                 this.scope.current.addToSymbolTable(
                     lexeme,
@@ -267,7 +270,7 @@ export default class SemanticAnalyzer {
         this.code.addENPR(this.scope.currentLexicalLevel);
 
         this.analyzeBloco(procedure.bloco);
-        this.scope.removeScope();
+        this.scope.removeScope(this.code);
 
         // Add to outside scope for normal calls
         this.scope.current.addToSymbolTable(lexeme, {
@@ -299,6 +302,18 @@ export default class SemanticAnalyzer {
             let realLeftType = funcRetAtrib
                 ? (variable as Fun).returnType
                 : fromSymbolItemType(variable.type);
+
+            if (funcRetAtrib) {
+                this.code.addARMZ(
+                    this.scope.currentLexicalLevel,
+                    -4 - (variable as Fun).params.length,
+                );
+            } else {
+                this.code.addARMZ(
+                    this.scope.currentLexicalLevel,
+                    variable.index,
+                );
+            }
 
             if (realLeftType !== exprType) {
                 throw new SemanticError({
@@ -364,6 +379,8 @@ export default class SemanticAnalyzer {
                     });
                 }
             }
+
+            this.code.addCHPR(proc.index, this.scope.currentLexicalLevel);
         }
 
         if (command instanceof Condicional) {
@@ -377,15 +394,30 @@ export default class SemanticAnalyzer {
                 });
             }
 
+            const ifLabel = this.code.currentLabel;
+            const elseLabel = this.code.newLabel();
+
+            this.code.addDSFV(elseLabel);
+
             this.analyzeComando(command.comandoThen);
 
             if (command.comandoElse) {
+                this.code.addDSVS(this.code.newLabel());
+                this.code.addLabel(ifLabel);
                 this.analyzeComando(command.comandoElse);
+                this.code.addLabel(elseLabel);
+            } else {
+                this.code.addLabel(ifLabel);
             }
         }
 
         if (command instanceof Repeticao) {
+            const repeatLabel = this.code.newLabel();
+            const outOfWhileLabel = this.code.newLabel();
+
+            this.code.addLabel(repeatLabel);
             const exprType = this.analyzeExpr(command.expr);
+            this.code.addDSFV(outOfWhileLabel);
 
             if (exprType !== UsableType.Boolean) {
                 throw new SemanticError({
@@ -396,10 +428,13 @@ export default class SemanticAnalyzer {
             }
 
             this.analyzeComando(command.comando);
+            this.code.addDSVS(repeatLabel);
+            this.code.addLabel(outOfWhileLabel);
         }
 
         if (command instanceof Leitura) {
             for (const id of command.identificadores.identificadores) {
+                this.code.addLEIT();
                 const lexeme = id.lexeme;
 
                 if (!this.scope.current.existsInSymbolTable(lexeme)) {
@@ -408,6 +443,11 @@ export default class SemanticAnalyzer {
                         lexeme,
                         placement: id.token.placement,
                     });
+                } else {
+                    const variable =
+                        this.scope.current.getFromSymbolTable(lexeme)!;
+
+                    this.code.addARMZ(variable.lexicalLevel, variable.index);
                 }
             }
         }
@@ -415,6 +455,7 @@ export default class SemanticAnalyzer {
         if (command instanceof Escrita) {
             for (const expr of command.args.exprs) {
                 this.analyzeExpr(expr);
+                this.code.addIMPR();
             }
         }
 
@@ -533,14 +574,18 @@ export default class SemanticAnalyzer {
                 });
             }
 
+            this.code.addCRVL(symbolItem.lexicalLevel, symbolItem.index);
+
             return fromSymbolItemType(symbolItem.type);
         }
 
         if (factor instanceof Numero) {
+            this.code.addCRCT(factor.value);
             return UsableType.Integer;
         }
 
         if (factor instanceof Logico) {
+            this.code.addCRCT(Number(factor.value));
             return UsableType.Boolean;
         }
 
@@ -564,6 +609,8 @@ export default class SemanticAnalyzer {
                     callType: 'function',
                 });
             }
+
+            this.code.addAMEM(1);
 
             if (factor.exprs.exprs.length !== func.params.length) {
                 throw new SemanticError({
@@ -599,6 +646,7 @@ export default class SemanticAnalyzer {
                 }
             }
 
+            this.code.addCHPR(func.index, this.scope.currentLexicalLevel);
             return func.returnType;
         }
 
@@ -607,14 +655,17 @@ export default class SemanticAnalyzer {
         }
 
         if (factor instanceof Negacao) {
-            return this.analyzeFator(factor.fator);
+            const fator = this.analyzeFator(factor.fator);
+            this.code.addNEGA();
+            return fator;
         }
 
         if (factor instanceof UMinus) {
-            return this.analyzeFator(factor.fator);
+            const fator = this.analyzeFator(factor.fator);
+            this.code.addINVR();
+            return fator;
         }
 
-        console.log(factor);
         throw Error('not any match in analyzeFator');
     }
 }

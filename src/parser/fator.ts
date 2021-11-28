@@ -44,6 +44,10 @@ export class Numero {
     get placement(): Placement {
         return this.literal.token.placement;
     }
+
+    get value() {
+        return this.literal.literal;
+    }
 }
 
 export class Logico {
@@ -53,6 +57,10 @@ export class Logico {
 
     get placement(): Placement {
         return this.literal.token.placement;
+    }
+
+    get value() {
+        return this.literal.literal;
     }
 }
 

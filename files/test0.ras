@@ -1,0 +1,7 @@
+// este eh o programa mais simples que pode ser escrito em Rascal
+program programaSimples;
+  var x: integer;
+
+  begin
+    write(not false);
+  end.

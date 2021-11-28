@@ -1,11 +1,6 @@
+import CodeGenerator from '../code-generator/code-generator';
 import { Nullable } from '../common/util';
-import Table, {
-    fromUsableType,
-    Fun,
-    Procedure,
-    SymbolItem,
-    UsableType,
-} from './symbol-table';
+import Table, { SymbolItem, SymbolItemType, UsableType } from './symbol-table';
 
 export class ScopeItem {
     private readonly symbolTable = new Table<SymbolItem>();
@@ -15,6 +10,20 @@ export class ScopeItem {
     constructor(private readonly parentScope: Nullable<ScopeItem>) {
         this.declaredTypes.insert('integer', UsableType.Integer);
         this.declaredTypes.insert('boolean', UsableType.Boolean);
+    }
+
+    get allVariablesSize() {
+        return this.symbolTable.allAsArray.reduce((acc, symbol) => {
+            if (
+                (symbol.type === SymbolItemType.Boolean ||
+                    symbol.type === SymbolItemType.Integer) &&
+                !symbol.isParam
+            ) {
+                return acc + 1;
+            }
+
+            return acc;
+        }, 0);
     }
 
     addToSymbolTable(id: string, item: SymbolItem) {
@@ -64,7 +73,8 @@ export default class Scope {
         throw new Error('MAX_SCOPE_DEPTH reached');
     }
 
-    public removeScope() {
+    public removeScope(code: CodeGenerator) {
+        code.addDMEM(this.current.allVariablesSize);
         return this.scopes.pop();
     }
 

@@ -29,6 +29,7 @@ export default class CodeGenerator {
 
     addPARA() {
         this._generatedCode.push('PARA');
+        this._generatedCode.push('');
     }
 
     addDSVS(label: string | number) {

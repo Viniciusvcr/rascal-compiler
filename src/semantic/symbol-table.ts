@@ -14,6 +14,7 @@ export enum UsableType {
 interface CodeGeneratorProps {
     index: number;
     lexicalLevel: number;
+    isParam?: boolean;
 }
 
 interface Program extends CodeGeneratorProps {
@@ -64,6 +65,14 @@ export function fromSymbolItemType(type: SymbolItemType): UsableType {
 
 export default class Table<T> {
     private readonly table = new Map<string, T>();
+
+    get size() {
+        return this.table.size;
+    }
+
+    get allAsArray() {
+        return [...this.table.values()];
+    }
 
     public insert(id: string, item: T) {
         this.table.set(id, item);
