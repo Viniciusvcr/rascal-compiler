@@ -489,6 +489,27 @@ export default class SemanticAnalyzer {
                 });
             }
 
+            switch (expr.relacao.type) {
+                case TokenType.EQUAL:
+                    this.code.addCMIG();
+                    break;
+                case TokenType.DIFFERENCE:
+                    this.code.addCMDG();
+                    break;
+                case TokenType.LESS:
+                    this.code.addCMME();
+                    break;
+                case TokenType.LESS_EQUAL:
+                    this.code.addCMEG();
+                    break;
+                case TokenType.GREATER:
+                    this.code.addCMMA();
+                    break;
+                case TokenType.GREATER_EQUAL:
+                    this.code.addCMAG();
+                    break;
+            }
+
             return UsableType.Boolean;
         }
 
@@ -523,6 +544,18 @@ export default class SemanticAnalyzer {
                     placement: expr.op.placement,
                 });
             }
+
+            switch (expr.op.type) {
+                case TokenType.PLUS:
+                    this.code.addSOMA();
+                    break;
+                case TokenType.MINUS:
+                    this.code.addSUBT();
+                    break;
+                case TokenType.OR:
+                    this.code.addDISJ();
+                    break;
+            }
         }
 
         return leftType;
@@ -555,6 +588,18 @@ export default class SemanticAnalyzer {
                     rigth: rightType,
                     placement: expr.op.placement,
                 });
+            }
+
+            switch (expr.op.type) {
+                case TokenType.STAR:
+                    this.code.addMULT();
+                    break;
+                case TokenType.DIV:
+                    this.code.addDIVI();
+                    break;
+                case TokenType.AND:
+                    this.code.addCONJ();
+                    break;
             }
         }
 
