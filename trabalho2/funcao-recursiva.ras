@@ -1,0 +1,21 @@
+program mostraFibonacci;
+  var i, x: integer;
+
+  function fibonacci(n: integer): integer;
+    begin
+      if ((n = 0) or (n = 1)) then
+        fibonacci := n
+      else
+        fibonacci := fibonacci(n-1) + fibonacci(n-2);
+    end;
+
+begin
+  read(x);
+
+  i := 0;
+  while i < x do
+    begin
+      write(fibonacci(i));
+      i := i + 1;
+    end;
+end.

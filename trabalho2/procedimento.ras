@@ -1,0 +1,22 @@
+program verificaAprovacao;
+  var nota1, nota2, nota3, mediaMinima: integer;
+
+  procedure verificarAprovacao(n1: integer; n2: integer; n3: integer; mediaMinima: integer);
+    var mediaFinal: integer;
+    begin
+      mediaFinal := ((n1 + n2) + n3) div 3;
+
+      if (mediaFinal >= mediaMinima) then
+          write(true)
+      else
+        write(false);
+    end;
+
+begin
+  read(nota1);
+  read(nota2);
+  read(nota3);
+  read(mediaMinima);
+
+  verificarAprovacao(nota1, nota2, nota3, mediaMinima);
+end.

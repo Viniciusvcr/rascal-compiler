@@ -1,0 +1,25 @@
+program whileIf;
+  var x, y, soma, limiar: integer;
+      continuar: boolean;
+
+begin
+  continuar := true;
+
+  read(limiar);
+
+  while (continuar) do
+    begin
+      read(x);
+      read(y);
+      
+      soma := x + y;
+
+      if (soma > limiar) then
+        write(true)
+      else
+        write(false);
+
+      read(continuar);
+    end;
+
+end.
