@@ -1,5 +1,6 @@
 program calculaAreaTriangulo;
   var base, altura: integer;
+      area: integer;
 
   function areaTriangulo(b: integer; h: integer): integer;
     begin
@@ -10,5 +11,7 @@ begin
   read(base);
   read(altura);
 
-  write(areaTriangulo(base, altura));
+  area := areaTriangulo(base, altura);
+
+  write(area);
 end.
